@@ -73,6 +73,7 @@ NSString * const AKSIPCallTransferStatusDidChangeNotification
 @dynamic onLocalHold;
 @dynamic onRemoteHold;
 @synthesize account = account_;
+@synthesize uniqueID = uniqueID_;
 
 - (void)setDelegate:(id)aDelegate {
   if (delegate_ == aDelegate) {

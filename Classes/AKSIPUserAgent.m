@@ -1031,6 +1031,16 @@ static void AKSIPCallIncomingReceived(pjsua_acc_id accountIdentifier,
                                                    identifier:callIdentifier]
                         autorelease];
   
+  // Read the X-Unique-ID header and store the value in the call
+  pj_str_t str = pj_str("X-Unique-ID");
+  pjsip_generic_string_hdr *hdr = pjsip_msg_find_hdr_by_name(messageData->msg_info.msg, &str, NULL);
+  if (hdr) {
+    [theCall setUniqueID:[[[NSString alloc] initWithBytes:hdr->hvalue.ptr
+                                                   length:hdr->hvalue.slen
+                                                 encoding:NSASCIIStringEncoding] autorelease]];
+  }
+
+    
   [[theAccount calls] addObject:theCall];
   
   if ([[theAccount delegate] respondsToSelector:
@@ -1123,6 +1133,17 @@ static void AKSIPCallStateChanged(pjsua_call_id callIdentifier,
       code = msg->line.status.code;
       reason = msg->line.status.reason;
       
+      if (![theCall uniqueID]) {
+        // Read the X-Unique-ID header and store the value in the call
+        pj_str_t str = pj_str("X-Unique-ID");
+        pjsip_generic_string_hdr *hdr = pjsip_msg_find_hdr_by_name(msg, &str, NULL);
+        if (hdr) {
+          [theCall setUniqueID:[[[NSString alloc] initWithBytes:hdr->hvalue.ptr
+                                                         length:hdr->hvalue.slen
+                                                       encoding:NSASCIIStringEncoding] autorelease]];
+        }
+      }
+        
       // Start ringback for 180 for UAC unless there's SDP in 180.
       if (callInfo.role == PJSIP_ROLE_UAC &&
           code == 180 &&
