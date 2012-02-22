@@ -1115,35 +1115,37 @@ static void AKSIPCallStateChanged(pjsua_call_id callIdentifier,
                                       waitUntilDone:NO];
     
   } else {
+      pjsip_msg *msg;
+      if (sipEvent->type == PJSIP_EVENT_TSX_STATE) {
+          if (sipEvent->body.tsx_state.type == PJSIP_EVENT_RX_MSG) {
+              msg = sipEvent->body.tsx_state.src.rdata->msg_info.msg;
+          } else {
+              msg = sipEvent->body.tsx_state.src.tdata->msg;
+          }
+          
+          if (![theCall uniqueID]) {
+              // Read the X-Unique-ID header and store the value in the call
+              pj_str_t str = pj_str("X-Unique-ID");
+              pjsip_generic_string_hdr *hdr = pjsip_msg_find_hdr_by_name(msg, &str, NULL);
+              if (hdr) {
+                  [theCall setUniqueID:[[[NSString alloc] initWithBytes:hdr->hvalue.ptr
+                                                                 length:hdr->hvalue.slen
+                                                               encoding:NSASCIIStringEncoding] autorelease]];
+              }
+          }
+      }
+      
     if (callInfo.state == PJSIP_INV_STATE_EARLY) {
       // pj_str_t is a struct with NOT null-terminated string.
       pj_str_t reason;
-      pjsip_msg *msg;
       int code;
       
       // This can only occur because of TX or RX message.
       pj_assert(sipEvent->type == PJSIP_EVENT_TSX_STATE);
       
-      if (sipEvent->body.tsx_state.type == PJSIP_EVENT_RX_MSG) {
-        msg = sipEvent->body.tsx_state.src.rdata->msg_info.msg;
-      } else {
-        msg = sipEvent->body.tsx_state.src.tdata->msg;
-      }
-      
       code = msg->line.status.code;
       reason = msg->line.status.reason;
-      
-      if (![theCall uniqueID]) {
-        // Read the X-Unique-ID header and store the value in the call
-        pj_str_t str = pj_str("X-Unique-ID");
-        pjsip_generic_string_hdr *hdr = pjsip_msg_find_hdr_by_name(msg, &str, NULL);
-        if (hdr) {
-          [theCall setUniqueID:[[[NSString alloc] initWithBytes:hdr->hvalue.ptr
-                                                         length:hdr->hvalue.slen
-                                                       encoding:NSASCIIStringEncoding] autorelease]];
-        }
-      }
-        
+              
       // Start ringback for 180 for UAC unless there's SDP in 180.
       if (callInfo.role == PJSIP_ROLE_UAC &&
           code == 180 &&
