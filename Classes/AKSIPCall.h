@@ -120,7 +120,7 @@ extern NSString * const AKSIPCallTransferStatusDidChangeNotification;
   AKSIPAccount *account_;
     
     char buffer_[RECORD_BUFFER_SIZE];
-    pjmedia_port *port;
+    pjmedia_port *capture_port;
 }
 
 // The receiver's delegate.

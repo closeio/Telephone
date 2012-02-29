@@ -56,10 +56,39 @@ NSString * const AKSIPCallTransferStatusDidChangeNotification
 
 #define SAMPLES_PER_FRAME 160
 
+#define HEXVIEW_COLUMNS 80
+#define HEXVIEW_CHARS ((HEXVIEW_COLUMNS-1)/4)
+
+void hexview(char *buf, int size)
+{
+    int i;
+    unsigned char c;
+    
+    while (size>0)
+    {
+        for (i=0;i<HEXVIEW_CHARS;i++)
+        {
+            if (size-i>0)
+                printf("%02x ", (unsigned char)*(buf+i));
+            else
+                printf("   ");
+        }
+        printf(" ");
+        for (i=0;i<HEXVIEW_CHARS&&size-i>0;i++)
+        {
+            c = (unsigned char)*(buf+i);
+            printf("%c", c>=32&&c<127 ? c : '.');
+        }
+        buf+=HEXVIEW_CHARS;
+        size-=HEXVIEW_CHARS;
+        printf("\n");
+    }
+}
+
+
 pj_status_t capture_cb(pjmedia_port *port, void *usr_data) {
-//    pjmedia_frame frame;
-//    pjmedia_port_get_frame(port, &frame);
-    NSLog(@"got data");
+    NSLog(@"got data, size=%d", pjmedia_mem_capture_get_size(port));
+    hexview(usr_data, pjmedia_mem_capture_get_size(port));
 //    pjmedia_port_destroy(port);
 }
 
@@ -298,41 +327,41 @@ pj_status_t capture_cb(pjmedia_port *port, void *usr_data) {
     pjmedia_snd_port *ioport;
     pjmedia_port *playport;
 
-    pjmedia_snd_port_create(pool,
-                                 0,
-                                 2,                                /* use default dev.     */
-                                 8000,                                /* clock rate.          */
-                                 1,                           /* # of channels.       */
-                                 SAMPLES_PER_FRAME,           /* samples per frame.   */
-                                 16,   /* bits per sample.     */
-                                 0,                                 /* options              */
-                                 &ioport                          /* returned port        */
-                                 );
+//    pjmedia_snd_port_create(pool,
+//                                 0,
+//                                 2,                                /* use default dev.     */
+//                                 8000,                                /* clock rate.          */
+//                                 1,                           /* # of channels.       */
+//                                 SAMPLES_PER_FRAME,           /* samples per frame.   */
+//                                 16,   /* bits per sample.     */
+//                                 0,                                 /* options              */
+//                                 &ioport                          /* returned port        */
+//                                 );
+//
+//    pj_status_t rc=pjmedia_mem_player_create(pool,
+//                                             buffer_,
+//                                             RECORD_BUFFER_SIZE,
+//                                             8000  /* clock_rate */,
+//                                             1     /* channel_count */,
+//                                             SAMPLES_PER_FRAME,
+//                                             16    /* bits_per_sample*/,
+//                                             0     /* options*/,
+//                                             &playport);
+//    
+//    pjmedia_mem_player_set_eof_cb(playport, (void *)self, capture_cb);
+//    
+//    pjmedia_snd_port_connect(ioport, playport);
 
-    pj_status_t rc=pjmedia_mem_player_create(pool,
-                                             buffer_,
-                                             RECORD_BUFFER_SIZE,
-                                             8000  /* clock_rate */,
-                                             1     /* channel_count */,
-                                             SAMPLES_PER_FRAME,
-                                             16    /* bits_per_sample*/,
-                                             0     /* options*/,
-                                             &playport);
-    
-    pjmedia_mem_player_set_eof_cb(playport, (void *)self, capture_cb);
-    
-    pjmedia_snd_port_connect(ioport, playport);
-    
-    /*
-    NSLog(@"snd device number = %d", pjmedia_snd_get_dev_count());
     pjsua_conf_port_info info;
-    pjsua_conf_port_id port_id;
     pjsua_conf_get_port_info(pjsua_call_get_conf_port([self identifier]), &info);
-    pjmedia_mem_capture_create(pool, buffer_, sizeof(buffer_), info.clock_rate, info.channel_count, info.samples_per_frame, info.bits_per_sample, 0, &port);
-    pjmedia_mem_capture_set_eof_cb(port, NULL, capture_cb);
-    pjsua_conf_add_port(pool, port, &port_id);
-    pjsua_conf_connect(pjsua_call_get_conf_port([self identifier]), port_id);
-    */
+
+    pjmedia_mem_capture_create(pool, buffer_, RECORD_BUFFER_SIZE, info.clock_rate, info.channel_count, info.samples_per_frame, info.bits_per_sample, 0, &capture_port);
+    bzero(buffer_, RECORD_BUFFER_SIZE);
+    pjmedia_mem_capture_set_eof_cb(capture_port, buffer_ /* user data */, capture_cb);
+
+    pjsua_conf_port_id capture_conf_port;
+    pjsua_conf_add_port(pool, capture_port, &capture_conf_port);
+    pjsua_conf_connect(pjsua_call_get_conf_port([self identifier]), capture_conf_port);
     
   if (status != PJ_SUCCESS) {
     NSLog(@"Error answering call %@", self);
