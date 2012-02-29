@@ -74,6 +74,7 @@ NSString * const AKSIPCallTransferStatusDidChangeNotification
 @dynamic onRemoteHold;
 @synthesize account = account_;
 @synthesize uniqueID = uniqueID_;
+@synthesize extension = extension_;
 
 - (void)setDelegate:(id)aDelegate {
   if (delegate_ == aDelegate) {
