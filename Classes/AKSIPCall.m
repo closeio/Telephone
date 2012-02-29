@@ -53,6 +53,17 @@ NSString * const AKSIPCallDidRemoteHoldNotification = @"AKSIPCallDidRemoteHold";
 NSString * const AKSIPCallTransferStatusDidChangeNotification
   = @"AKSIPCallTransferStatusDidChange";
 
+
+#define SAMPLES_PER_FRAME 160
+
+pj_status_t capture_cb(pjmedia_port *port, void *usr_data) {
+//    pjmedia_frame frame;
+//    pjmedia_port_get_frame(port, &frame);
+    NSLog(@"got data");
+//    pjmedia_port_destroy(port);
+}
+
+
 @implementation AKSIPCall
 
 @synthesize delegate = delegate_;
@@ -278,8 +289,51 @@ NSString * const AKSIPCallTransferStatusDidChangeNotification
 }
 
 - (void)answer {
+    // input = 0
+    // output = 2
   pj_status_t status = pjsua_call_answer([self identifier], PJSIP_SC_OK,
                                          NULL, NULL);
+    
+    pj_pool_t *pool = [[AKSIPUserAgent sharedUserAgent] pjPool];
+    pjmedia_snd_port *ioport;
+    pjmedia_port *playport;
+
+    pjmedia_snd_port_create(pool,
+                                 0,
+                                 2,                                /* use default dev.     */
+                                 8000,                                /* clock rate.          */
+                                 1,                           /* # of channels.       */
+                                 SAMPLES_PER_FRAME,           /* samples per frame.   */
+                                 16,   /* bits per sample.     */
+                                 0,                                 /* options              */
+                                 &ioport                          /* returned port        */
+                                 );
+
+    pj_status_t rc=pjmedia_mem_player_create(pool,
+                                             buffer_,
+                                             RECORD_BUFFER_SIZE,
+                                             8000  /* clock_rate */,
+                                             1     /* channel_count */,
+                                             SAMPLES_PER_FRAME,
+                                             16    /* bits_per_sample*/,
+                                             0     /* options*/,
+                                             &playport);
+    
+    pjmedia_mem_player_set_eof_cb(playport, (void *)self, capture_cb);
+    
+    pjmedia_snd_port_connect(ioport, playport);
+    
+    /*
+    NSLog(@"snd device number = %d", pjmedia_snd_get_dev_count());
+    pjsua_conf_port_info info;
+    pjsua_conf_port_id port_id;
+    pjsua_conf_get_port_info(pjsua_call_get_conf_port([self identifier]), &info);
+    pjmedia_mem_capture_create(pool, buffer_, sizeof(buffer_), info.clock_rate, info.channel_count, info.samples_per_frame, info.bits_per_sample, 0, &port);
+    pjmedia_mem_capture_set_eof_cb(port, NULL, capture_cb);
+    pjsua_conf_add_port(pool, port, &port_id);
+    pjsua_conf_connect(pjsua_call_get_conf_port([self identifier]), port_id);
+    */
+    
   if (status != PJ_SUCCESS) {
     NSLog(@"Error answering call %@", self);
   }

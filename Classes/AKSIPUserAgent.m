@@ -786,7 +786,7 @@ static void AKSIPUserAgentDetectedNAT(const pj_stun_nat_detect_result *result);
   if (![self isStarted]) {
     return NO;
   }
-  
+    NSLog(@"snd dev=%d %d", input, output);
   pj_status_t status = pjsua_set_snd_dev(input, output);
   
   return (status == PJ_SUCCESS) ? YES : NO;

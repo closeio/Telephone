@@ -31,6 +31,8 @@
 #import <Foundation/Foundation.h>
 #import <pjsua-lib/pjsua.h>
 
+#define RECORD_BUFFER_SIZE (2*8000*5)
+
 
 extern const NSInteger kAKSIPCallsMax;
 
@@ -116,6 +118,9 @@ extern NSString * const AKSIPCallTransferStatusDidChangeNotification;
   
   // Account the call belongs to.
   AKSIPAccount *account_;
+    
+    char buffer_[RECORD_BUFFER_SIZE];
+    pjmedia_port *port;
 }
 
 // The receiver's delegate.
