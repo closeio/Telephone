@@ -265,6 +265,9 @@ NSString * const AKSIPCallTransferStatusDidChangeNotification
   [stateText_ release];
   [lastStatusText_ release];
   [transferStatusText_ release];
+    
+  [uniqueID_ release];
+  [extension_ release];
   
   [super dealloc];
 }

@@ -1035,8 +1035,8 @@ static void AKSIPCallIncomingReceived(pjsua_acc_id accountIdentifier,
   pj_str_t str;
   pjsip_generic_string_hdr *hdr;
 
-  hdr = pjsip_msg_find_hdr_by_name(messageData->msg_info.msg, &str, NULL);
   str = pj_str("X-Unique-ID");
+  hdr = pjsip_msg_find_hdr_by_name(messageData->msg_info.msg, &str, NULL);
   if (hdr) {
     [theCall setUniqueID:[[[NSString alloc] initWithBytes:hdr->hvalue.ptr
                                                    length:hdr->hvalue.slen
