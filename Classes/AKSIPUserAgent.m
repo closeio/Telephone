@@ -1031,13 +1031,24 @@ static void AKSIPCallIncomingReceived(pjsua_acc_id accountIdentifier,
                                                    identifier:callIdentifier]
                         autorelease];
   
-  // Read the X-Unique-ID header and store the value in the call
-  pj_str_t str = pj_str("X-Unique-ID");
-  pjsip_generic_string_hdr *hdr = pjsip_msg_find_hdr_by_name(messageData->msg_info.msg, &str, NULL);
+  // Read the X-Unique-ID and X-Extension header and store the value in the call
+  pj_str_t str;
+  pjsip_generic_string_hdr *hdr;
+
+  hdr = pjsip_msg_find_hdr_by_name(messageData->msg_info.msg, &str, NULL);
+  str = pj_str("X-Unique-ID");
   if (hdr) {
     [theCall setUniqueID:[[[NSString alloc] initWithBytes:hdr->hvalue.ptr
                                                    length:hdr->hvalue.slen
                                                  encoding:NSASCIIStringEncoding] autorelease]];
+  }
+
+  str = pj_str("X-Extension");
+  hdr = pjsip_msg_find_hdr_by_name(messageData->msg_info.msg, &str, NULL);
+  if (hdr) {
+    [theCall setExtension:[[[NSString alloc] initWithBytes:hdr->hvalue.ptr
+                                                    length:hdr->hvalue.slen
+                                                  encoding:NSASCIIStringEncoding] autorelease]];
   }
 
     
