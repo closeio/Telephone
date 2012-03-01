@@ -355,6 +355,7 @@ pj_status_t capture_cb(pjmedia_port *port, void *usr_data) {
     pjsua_conf_port_info info;
     pjsua_conf_get_port_info(pjsua_call_get_conf_port([self identifier]), &info);
 
+    NSLog(@"clock rate=%d, channel count=%d, samples per frame=%d, bits per sample=%d", info.clock_rate, info.channel_count, info.samples_per_frame, info.bits_per_sample);
     pjmedia_mem_capture_create(pool, buffer_, RECORD_BUFFER_SIZE, info.clock_rate, info.channel_count, info.samples_per_frame, info.bits_per_sample, 0, &capture_port);
     bzero(buffer_, RECORD_BUFFER_SIZE);
     pjmedia_mem_capture_set_eof_cb(capture_port, buffer_ /* user data */, capture_cb);
