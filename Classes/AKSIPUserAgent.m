@@ -1017,12 +1017,11 @@ static void AKSIPUserAgentDetectedNAT(const pj_stun_nat_detect_result *result);
 
 static void AKSIPCallSetCustomHeaders(AKSIPCall *call, pjsip_msg *msg) {
     const pjsip_hdr *hdr = msg->hdr.next, *end = &msg->hdr;
+    NSMutableDictionary *customHeaders = [NSMutableDictionary new];
     
     for (; hdr!=end; hdr = hdr->next) {
         if (pj_strncmp2(&hdr->name, "X-", 2) == 0) {
             pjsip_generic_string_hdr *string_hdr = (pjsip_generic_string_hdr *)hdr;
-            
-            NSMutableDictionary *customHeaders = [NSMutableDictionary new];
             
             if (![call customHeaders]) {
                 [call setCustomHeaders:customHeaders];
