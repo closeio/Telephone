@@ -111,8 +111,7 @@ extern NSString * const AKSIPCallTransferStatusDidChangeNotification;
   NSString *transferStatusText_;
   BOOL incoming_;
   BOOL microphoneMuted_;
-  NSString *uniqueID_;
-  NSString *extension_;
+  NSDictionary *customHeaders_;
   
   // Account the call belongs to.
   AKSIPAccount *account_;
@@ -173,11 +172,8 @@ extern NSString * const AKSIPCallTransferStatusDidChangeNotification;
 // The account the call belongs to.
 @property (nonatomic, assign) AKSIPAccount *account;
 
-// The unique ID supplied in the X-Unique-ID header.
-@property (nonatomic, retain) NSString *uniqueID;
-
-// The extension supplied in the X-Extension header.
-@property (nonatomic, retain) NSString *extension;
+// Headers starting with "X-" and their values.
+@property (nonatomic, retain) NSDictionary *customHeaders;
 
 // Designated initializer.
 // Initializes a AKSIPCall object with a given SIP account and identifier.

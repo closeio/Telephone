@@ -73,8 +73,7 @@ NSString * const AKSIPCallTransferStatusDidChangeNotification
 @dynamic onLocalHold;
 @dynamic onRemoteHold;
 @synthesize account = account_;
-@synthesize uniqueID = uniqueID_;
-@synthesize extension = extension_;
+@synthesize customHeaders = customHeaders_;
 
 - (void)setDelegate:(id)aDelegate {
   if (delegate_ == aDelegate) {
@@ -266,8 +265,7 @@ NSString * const AKSIPCallTransferStatusDidChangeNotification
   [lastStatusText_ release];
   [transferStatusText_ release];
     
-  [uniqueID_ release];
-  [extension_ release];
+  [customHeaders_ release];
   
   [super dealloc];
 }
