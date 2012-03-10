@@ -289,7 +289,7 @@ static void AKSIPUserAgentDetectedNAT(const pj_stun_nat_detect_result *result);
   return UINT_MAX;  // Denotes an object that cannot be released.
 }
 
-- (void)release {
+- (oneway void)release {
   // Do nothing.
 }
 
@@ -1015,6 +1015,28 @@ static void AKSIPUserAgentDetectedNAT(const pj_stun_nat_detect_result *result);
 #pragma mark -
 #pragma mark PJSUA callbacks
 
+static void AKSIPCallSetCustomHeaders(AKSIPCall *call, pjsip_msg *msg) {
+    const pjsip_hdr *hdr = msg->hdr.next, *end = &msg->hdr;
+    NSMutableDictionary *customHeaders = [NSMutableDictionary new];
+    
+    for (; hdr!=end; hdr = hdr->next) {
+        if (hdr->name.slen > 2 && pj_strncmp2(&hdr->name, "X-", 2) == 0) {
+            pjsip_generic_string_hdr *string_hdr = (pjsip_generic_string_hdr *)hdr;
+            
+            if (![call customHeaders]) {
+                [call setCustomHeaders:customHeaders];
+            }
+            
+            [customHeaders setValue:[[[NSString alloc] initWithBytes:string_hdr->hvalue.ptr
+                                                              length:string_hdr->hvalue.slen
+                                                            encoding:NSASCIIStringEncoding] autorelease]
+                             forKey:[[[NSString alloc] initWithBytes:hdr->name.ptr
+                                                              length:hdr->name.slen
+                                                            encoding:NSASCIIStringEncoding] autorelease]];
+        }
+    }
+}
+
 static void AKSIPCallIncomingReceived(pjsua_acc_id accountIdentifier,
                                       pjsua_call_id callIdentifier,
                                       pjsip_rx_data *messageData) {
@@ -1031,27 +1053,9 @@ static void AKSIPCallIncomingReceived(pjsua_acc_id accountIdentifier,
                                                    identifier:callIdentifier]
                         autorelease];
   
-  // Read the X-Unique-ID and X-Extension header and store the value in the call
-  pj_str_t str;
-  pjsip_generic_string_hdr *hdr;
-
-  str = pj_str("X-Unique-ID");
-  hdr = pjsip_msg_find_hdr_by_name(messageData->msg_info.msg, &str, NULL);
-  if (hdr) {
-    [theCall setUniqueID:[[[NSString alloc] initWithBytes:hdr->hvalue.ptr
-                                                   length:hdr->hvalue.slen
-                                                 encoding:NSASCIIStringEncoding] autorelease]];
-  }
-
-  str = pj_str("X-Extension");
-  hdr = pjsip_msg_find_hdr_by_name(messageData->msg_info.msg, &str, NULL);
-  if (hdr) {
-    [theCall setExtension:[[[NSString alloc] initWithBytes:hdr->hvalue.ptr
-                                                    length:hdr->hvalue.slen
-                                                  encoding:NSASCIIStringEncoding] autorelease]];
-  }
-
-    
+  // Scan through all X- headers and store them in a dict.
+  AKSIPCallSetCustomHeaders(theCall, messageData->msg_info.msg);
+     
   [[theAccount calls] addObject:theCall];
   
   if ([[theAccount delegate] respondsToSelector:
@@ -1134,15 +1138,9 @@ static void AKSIPCallStateChanged(pjsua_call_id callIdentifier,
               msg = sipEvent->body.tsx_state.src.tdata->msg;
           }
           
-          if (![theCall uniqueID]) {
-              // Read the X-Unique-ID header and store the value in the call
-              pj_str_t str = pj_str("X-Unique-ID");
-              pjsip_generic_string_hdr *hdr = pjsip_msg_find_hdr_by_name(msg, &str, NULL);
-              if (hdr) {
-                  [theCall setUniqueID:[[[NSString alloc] initWithBytes:hdr->hvalue.ptr
-                                                                 length:hdr->hvalue.slen
-                                                               encoding:NSASCIIStringEncoding] autorelease]];
-              }
+          if (![theCall customHeaders]) {
+              // Scan through all X- headers and store them in a dict.
+              AKSIPCallSetCustomHeaders(theCall, msg);
           }
       }
       

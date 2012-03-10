@@ -90,6 +90,7 @@ pj_status_t capture_cb(pjmedia_port *port, void *usr_data) {
     NSLog(@"got data, size=%d", pjmedia_mem_capture_get_size(port));
     hexview(usr_data, pjmedia_mem_capture_get_size(port));
 //    pjmedia_port_destroy(port);
+    return PJ_SUCCESS;
 }
 
 
@@ -113,8 +114,7 @@ pj_status_t capture_cb(pjmedia_port *port, void *usr_data) {
 @dynamic onLocalHold;
 @dynamic onRemoteHold;
 @synthesize account = account_;
-@synthesize uniqueID = uniqueID_;
-@synthesize extension = extension_;
+@synthesize customHeaders = customHeaders_;
 
 - (void)setDelegate:(id)aDelegate {
   if (delegate_ == aDelegate) {
@@ -306,8 +306,7 @@ pj_status_t capture_cb(pjmedia_port *port, void *usr_data) {
   [lastStatusText_ release];
   [transferStatusText_ release];
     
-  [uniqueID_ release];
-  [extension_ release];
+  [customHeaders_ release];
   
   [super dealloc];
 }

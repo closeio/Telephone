@@ -33,9 +33,6 @@
 #import "AKABRecord+Querying.h"
 
 
-NSString * const AKAddressBookDidDialSIPAddressNotification
-  = @"AKAddressBookDidDialSIPAddress";
-
 @implementation AKAddressBookSIPAddressPlugIn
 
 @synthesize lastSIPAddress = lastSIPAddress_;
@@ -88,17 +85,11 @@ NSString * const AKAddressBookDidDialSIPAddressNotification
 - (void)performActionForPerson:(ABPerson *)person
                     identifier:(NSString *)identifier {
   
-  NSArray *applications = [[NSWorkspace sharedWorkspace] launchedApplications];
-  BOOL isTelephoneLaunched = NO;
-  for (NSDictionary *anApplication in applications) {
-    NSString *bundleIdentifier
-      = [anApplication objectForKey:@"NSApplicationBundleIdentifier"];
-    
-    if ([bundleIdentifier isEqualToString:@"com.tlphn.Telephone"]) {
-      isTelephoneLaunched = YES;
-      break;
-    }
-  }
+  NSArray *applications = [[NSWorkspace sharedWorkspace] runningApplications];
+  NSPredicate *predicate = [NSPredicate predicateWithFormat:
+                            @"bundleIdentifier == 'com.tlphn.Telephone'"];
+  applications = [applications filteredArrayUsingPredicate:predicate];
+  BOOL isTelephoneLaunched = [applications count] > 0;
   
   ABMultiValue *emails = [person valueForProperty:[self actionProperty]];
   NSString *anEmail = [emails valueForIdentifier:identifier];
@@ -138,8 +129,9 @@ NSString * const AKAddressBookDidDialSIPAddressNotification
 }
 
 - (void)workspaceDidLaunchApplication:(NSNotification *)notification {
-  NSString *bundleIdentifier
-    = [[notification userInfo] objectForKey:@"NSApplicationBundleIdentifier"];
+  NSRunningApplication *application
+    = [[notification userInfo] objectForKey:NSWorkspaceApplicationKey];
+  NSString *bundleIdentifier = [application bundleIdentifier];
   
   if ([bundleIdentifier isEqualToString:@"com.tlphn.Telephone"] &&
       [self shouldDial]) {
