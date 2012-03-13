@@ -37,6 +37,8 @@
 
 #define THIS_FILE "AKSIPCall.m"
 
+#import <pjsua-lib/pjsua_internal.h>
+
 
 const NSInteger kAKSIPCallsMax = 8;
 
@@ -87,8 +89,8 @@ void hexview(char *buf, int size)
 
 
 pj_status_t capture_cb(pjmedia_port *port, void *usr_data) {
-    NSLog(@"got data, size=%d", pjmedia_mem_capture_get_size(port));
-    hexview(usr_data, pjmedia_mem_capture_get_size(port));
+//    NSLog(@"got data, size=%d", pjmedia_mem_capture_get_size(port));
+//    hexview(usr_data, pjmedia_mem_capture_get_size(port));
 //    pjmedia_port_destroy(port);
     return PJ_SUCCESS;
 }
@@ -322,34 +324,14 @@ pj_status_t capture_cb(pjmedia_port *port, void *usr_data) {
   pj_status_t status = pjsua_call_answer([self identifier], PJSIP_SC_OK,
                                          NULL, NULL);
     
-    pj_pool_t *pool = [[AKSIPUserAgent sharedUserAgent] pjPool];
-    pjmedia_snd_port *ioport;
-    pjmedia_port *playport;
-
-//    pjmedia_snd_port_create(pool,
-//                                 0,
-//                                 2,                                /* use default dev.     */
-//                                 8000,                                /* clock rate.          */
-//                                 1,                           /* # of channels.       */
-//                                 SAMPLES_PER_FRAME,           /* samples per frame.   */
-//                                 16,   /* bits per sample.     */
-//                                 0,                                 /* options              */
-//                                 &ioport                          /* returned port        */
-//                                 );
-//
-//    pj_status_t rc=pjmedia_mem_player_create(pool,
-//                                             buffer_,
-//                                             RECORD_BUFFER_SIZE,
-//                                             8000  /* clock_rate */,
-//                                             1     /* channel_count */,
-//                                             SAMPLES_PER_FRAME,
-//                                             16    /* bits_per_sample*/,
-//                                             0     /* options*/,
-//                                             &playport);
-//    
-//    pjmedia_mem_player_set_eof_cb(playport, (void *)self, capture_cb);
-//    
-//    pjmedia_snd_port_connect(ioport, playport);
+//    pj_pool_t *pool = [[AKSIPUserAgent sharedUserAgent] pjPool];
+    struct pjsua_data* pjsua_dat = pjsua_get_var();
+    
+    pj_pool_t *pool = pjsua_dat->pool;
+    
+    
+//    const int POOL_SIZE = 512;
+//    pj_pool_t *pool = pjsua_pool_create("pytmp", POOL_SIZE, POOL_SIZE);
 
     pjsua_conf_port_info info;
     pjsua_conf_get_port_info(pjsua_call_get_conf_port([self identifier]), &info);
@@ -361,7 +343,10 @@ pj_status_t capture_cb(pjmedia_port *port, void *usr_data) {
 
     pjsua_conf_port_id capture_conf_port;
     pjsua_conf_add_port(pool, capture_port, &capture_conf_port);
+    
     pjsua_conf_connect(pjsua_call_get_conf_port([self identifier]), capture_conf_port);
+    
+//    pj_pool_release(pool);
     
   if (status != PJ_SUCCESS) {
     NSLog(@"Error answering call %@", self);
