@@ -1020,7 +1020,7 @@ static void AKSIPCallSetCustomHeaders(AKSIPCall *call, pjsip_msg *msg) {
     NSMutableDictionary *customHeaders = [NSMutableDictionary new];
     
     for (; hdr!=end; hdr = hdr->next) {
-        if (hdr->name.slen > 2 && pj_strncmp2(&hdr->name, "X-", 2) == 0) {
+        if (hdr->name.slen > 2 && pj_strnicmp2(&hdr->name, "x-", 2) == 0) {
             pjsip_generic_string_hdr *string_hdr = (pjsip_generic_string_hdr *)hdr;
             
             if (![call customHeaders]) {
@@ -1030,9 +1030,9 @@ static void AKSIPCallSetCustomHeaders(AKSIPCall *call, pjsip_msg *msg) {
             [customHeaders setValue:[[[NSString alloc] initWithBytes:string_hdr->hvalue.ptr
                                                               length:string_hdr->hvalue.slen
                                                             encoding:NSASCIIStringEncoding] autorelease]
-                             forKey:[[[NSString alloc] initWithBytes:hdr->name.ptr
+                             forKey:[[[[NSString alloc] initWithBytes:hdr->name.ptr
                                                               length:hdr->name.slen
-                                                            encoding:NSASCIIStringEncoding] autorelease]];
+                                                            encoding:NSASCIIStringEncoding] autorelease] lowercaseString]];
         }
     }
 }
